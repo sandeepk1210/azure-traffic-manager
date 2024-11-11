@@ -1,10 +1,3 @@
-# Random password
-resource "random_password" "admin_password" {
-  length           = 16
-  special          = true
-  override_special = "!@#$%&*()-_=+[]{}<>:?"
-}
-
 # Random string for unique Key Vault name
 resource "random_string" "unique" {
   length  = 8
@@ -14,7 +7,7 @@ resource "random_string" "unique" {
 
 # Key Vault
 resource "azurerm_key_vault" "kv" {
-  name                       = "kv-${lower(random_string.unique.result)}"
+  name                       = "appkv-${lower(random_string.unique.result)}"
   location                   = data.azurerm_resource_group.rg.location
   resource_group_name        = data.azurerm_resource_group.rg.name
   tenant_id                  = data.azurerm_client_config.current.tenant_id
@@ -31,9 +24,18 @@ resource "azurerm_key_vault" "kv" {
   }
 }
 
+# Random password
+resource "random_password" "admin_password" {
+  count            = var.vm_count
+  length           = 16
+  special          = true
+  override_special = "!@#$%&*()-_=+[]{}<>:?"
+}
+
 # Store Admin Password in Key Vault
 resource "azurerm_key_vault_secret" "admin_password" {
-  name         = "vm-admin-password"
-  value        = random_password.admin_password.result
+  count        = var.vm_count
+  name         = "vm-admin-password-${count.index + 1}"
+  value        = random_password.admin_password[count.index].result
   key_vault_id = azurerm_key_vault.kv.id
 }

@@ -40,6 +40,13 @@ variable "admin_username" {
   description = "Admin username for the virtual machines"
 }
 
+# Load Balancer
+# Variable for the count of Load Balancers
+variable "lb_count" {
+  type        = number
+  description = "The number of load balancers to create"
+}
+
 variable "lb_domain_name" {
   type = string
 }

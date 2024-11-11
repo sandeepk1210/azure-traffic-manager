@@ -22,10 +22,12 @@ resource "azurerm_traffic_manager_profile" "vm_profile" {
   }
 }
 
+# Traffic Manager Endpoints for each Load Balancer
 resource "azurerm_traffic_manager_azure_endpoint" "vm_endpoint" {
-  name                 = "vm-endpoint"
+  count                = var.lb_count
+  name                 = "appvm-endpoint-${count.index + 1}"
   profile_id           = azurerm_traffic_manager_profile.vm_profile.id
   always_serve_enabled = true
-  weight               = 1
-  target_resource_id   = azurerm_public_ip.app_lb_public_ip.id
+  weight               = count.index + 1
+  target_resource_id   = azurerm_public_ip.app_lb_public_ip[count.index].id
 }

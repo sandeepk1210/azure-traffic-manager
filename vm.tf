@@ -1,7 +1,38 @@
+# Windows Virtual Machines
+resource "azurerm_windows_virtual_machine" "vm" {
+  count               = var.vm_count
+  name                = "appvm-${count.index + 1}"
+  resource_group_name = data.azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location
+  size                = var.vm_size
+  admin_username      = var.admin_username
+  admin_password      = azurerm_key_vault_secret.admin_password[count.index].value
+  network_interface_ids = [
+    azurerm_network_interface.nic[count.index].id
+  ]
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2019-Datacenter"
+    version   = "latest"
+  }
+
+  # Explicit dependency on the Key Vault
+  depends_on = [
+    azurerm_key_vault.kv
+  ]
+}
+
 # Network Interface
 resource "azurerm_network_interface" "nic" {
   count               = var.vm_count
-  name                = "vm-nic-${count.index + 1}"
+  name                = "app-nic-${count.index + 1}"
   location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
 
@@ -14,7 +45,7 @@ resource "azurerm_network_interface" "nic" {
 
 # Network Security Group
 resource "azurerm_network_security_group" "nsg" {
-  name                = "vm-nsg"
+  name                = "app-nsg"
   location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
 
